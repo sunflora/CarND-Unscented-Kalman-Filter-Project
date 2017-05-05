@@ -12,6 +12,9 @@ using std::vector;
  * Initializes Unscented Kalman filter
  */
 UKF::UKF() {
+
+  is_debug_ = false;
+
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
@@ -104,14 +107,14 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     measurements.
     */
 
-    std::cout << "In ProcessMeasurement" << std::endl;
+    if (is_debug_) std::cout << "In ProcessMeasurement" << std::endl;
 
     /*****************************************************************************
     *  Initialization
     ****************************************************************************/
     if (!is_initialized_) {
 
-        std::cout << "Begin Initialization." << std::endl;
+        if (is_debug_) std::cout << "Begin Initialization." << std::endl;
 
         P_ << 1, 0, 0, 0, 0,
               0, 1, 0, 0, 0,
@@ -157,9 +160,9 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
         // done initializing, no need to predict or update
         is_initialized_ = true;
 
-        cout << "Initialized!" << endl;
-        cout << "x_: " << endl;
-        cout << x_ << endl;
+        if (is_debug_) cout << "Initialized!" << endl;
+        if (is_debug_) cout << "x_: " << endl;
+        if (is_debug_) cout << x_ << endl;
 
         return;
     }
@@ -235,19 +238,6 @@ void UKF::AugmentedSigmaPoints(MatrixXd &Xsig_aug) {
     //create square root matrix
     MatrixXd L = P_aug.llt().matrixL();
 
-/*
-    Eigen::LLT<MatrixXd> lltOfPaug(P_aug);
-
-
-    if (lltOfPaug.info() == Eigen::NumericalIssue) {
-
-        cout << "LLT failed!" << endl;
-        throw range_error("LLT failed");
-    }
-
-    MatrixXd L = lltOfPaug.matrixL();
-*/
-
     //create augmented sigma points
     Xsig_aug.col(0) = x_aug;
     for (int i = 0; i < n_aug_; i++) {
@@ -256,7 +246,7 @@ void UKF::AugmentedSigmaPoints(MatrixXd &Xsig_aug) {
     }
 
     //print result
-    std::cout << "Xsig_aug = " << std::endl << Xsig_aug << std::endl;
+    if (is_debug_) std::cout << "Xsig_aug = " << std::endl << Xsig_aug << std::endl;
 
 }
 
@@ -308,7 +298,7 @@ void UKF::SigmaPointPrediction(MatrixXd &Xsig_aug, double delta_t) {
     }
 
     //print result
-    std::cout << "Xsig_pred_ = " << std::endl << Xsig_pred_ << std::endl;
+    if (is_debug_) std::cout << "Xsig_pred_ = " << std::endl << Xsig_pred_ << std::endl;
 
 }
 
@@ -327,8 +317,8 @@ void UKF::PredictMeanAndCovariance() {
     for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
         x_ = x_+ weights_(i) * Xsig_pred_.col(i);
     }
-    std::cout << "predicted state mean x_ is: " << std::endl;
-    std::cout << x_ << std::endl;
+    if (is_debug_) std::cout << "predicted state mean x_ is: " << std::endl;
+    if (is_debug_) std::cout << x_ << std::endl;
 
     //predicted state covariance matrix
     P_.fill(0.0);
@@ -337,7 +327,7 @@ void UKF::PredictMeanAndCovariance() {
         // state difference
         VectorXd x_diff = Xsig_pred_.col(i) - x_;
         //angle normalization
-        std::cout << "x_diff(3): " << x_diff(3) <<  std::endl;
+        if (is_debug_) std::cout << "x_diff(3): " << x_diff(3) <<  std::endl;
 
         //while (x_diff(3)>  M_PI) x_diff(3)-=2.*M_PI;
         //while (x_diff(3)< -M_PI) x_diff(3)+=2.*M_PI;
@@ -347,8 +337,8 @@ void UKF::PredictMeanAndCovariance() {
         P_ = P_ + weights_(i) * x_diff * x_diff.transpose() ;
     }
 
-    std::cout << "state covariance matrix P_ is " << std::endl;
-    std::cout << P_ << std::endl;
+    if (is_debug_) std::cout << "state covariance matrix P_ is " << std::endl;
+    if (is_debug_) std::cout << P_ << std::endl;
 
 }
 
@@ -398,7 +388,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
         }
     }
 
-    std::cout << "Zsig: " << std::endl << Zsig << std::endl;
+    if (is_debug_) std::cout << "Zsig: " << std::endl << Zsig << std::endl;
 
     //mean predicted measurement
     VectorXd z_pred = VectorXd(n_z);
